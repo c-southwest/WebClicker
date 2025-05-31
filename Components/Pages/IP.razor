@@ -1,0 +1,333 @@
+﻿@page "/ip"
+@rendermode InteractiveServer
+@inject IJSRuntime JSRuntime
+@using System.Net.NetworkInformation
+@using System.Net
+
+<PageTitle>IP Information</PageTitle>
+
+<div class="ip-container">
+    <h1>🌐 Network Information</h1>
+    <p class="subtitle">Available IP addresses on this device</p>
+
+    @if (ipAddresses.Any())
+    {
+        <div class="ip-list">
+            @foreach (var ipInfo in ipAddresses)
+            {
+                <div class="ip-card">
+                    <div class="ip-info">
+                        <h3>@ipInfo.InterfaceName</h3>
+                        <div class="ip-address">@ipInfo.Address</div>
+                        <div class="ip-type">@ipInfo.Type</div>
+                    </div>
+                    <button class="copy-btn" @onclick="() => CopyToClipboard(ipInfo.Address)">
+                        📋 Copy
+                    </button>
+                </div>
+            }
+        </div>
+
+        <div class="quick-urls">
+            <h3>Quick Access URLs:</h3>
+            @foreach (var ipInfo in ipAddresses.Where(x => x.Type.Contains("IPv4") && !x.Address.StartsWith("127.")))
+            {
+                <div class="url-card">
+                    <div class="url-info">
+                        <div class="url">http://@ipInfo.Address:80</div>
+                        <div class="url-https">https://@ipInfo.Address:443</div>
+                    </div>
+                    <div class="url-buttons">
+                        <button class="copy-btn small" @onclick="() => CopyHttpUrl(ipInfo.Address)">
+                            Copy HTTP
+                        </button>
+                        <button class="copy-btn small" @onclick="() => CopyHttpsUrl(ipInfo.Address)">
+                            Copy HTTPS
+                        </button>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="loading">Loading network information...</div>
+    }
+
+    <button class="refresh-btn" @onclick="RefreshIPs">
+        🔄 Refresh
+    </button>
+
+    @if (!string.IsNullOrEmpty(copyMessage))
+    {
+        <div class="copy-message">@copyMessage</div>
+    }
+</div>
+
+<style>
+    .ip-container {
+        padding: 2rem;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #000000;
+        color: #ffffff;
+        min-height: 100vh;
+        
+    }
+
+    h1 {
+        text-align: center;
+        margin-bottom: 0.5rem;
+        color: #ffffff;
+    }
+
+    .subtitle {
+        text-align: center;
+        color: #cccccc;
+        margin-bottom: 2rem;
+        font-size: 1rem;
+    }
+
+    .ip-list {
+        margin-bottom: 2rem;
+    }
+
+    .ip-card {
+        background-color: #111111;
+        border: 1px solid #333333;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .ip-info h3 {
+        margin: 0 0 0.5rem 0;
+        color: #ffffff;
+        font-size: 1rem;
+    }
+
+    .ip-address {
+        font-family: 'Consolas', monospace;
+        font-size: 1.2rem;
+        color: #00ff88;
+        font-weight: bold;
+        margin-bottom: 0.2rem;
+    }
+
+    .ip-type {
+        font-size: 0.85rem;
+        color: #888888;
+    }
+
+    .copy-btn {
+        background-color: #222222;
+        border: 1px solid #444444;
+        color: #ffffff;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 0.9rem;
+    }
+
+    .copy-btn:hover {
+        background-color: #333333;
+        border-color: #555555;
+    }
+
+    .copy-btn:active {
+        background-color: #444444;
+        transform: scale(0.98);
+    }
+
+    .copy-btn.small {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.8rem;
+        margin: 0 0.2rem;
+    }
+
+    .quick-urls {
+        margin-bottom: 2rem;
+    }
+
+    .quick-urls h3 {
+        color: #ffffff;
+        margin-bottom: 1rem;
+    }
+
+    .url-card {
+        background-color: #111111;
+        border: 1px solid #333333;
+        border-radius: 10px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+
+    .url-info {
+        margin-bottom: 0.5rem;
+    }
+
+    .url, .url-https {
+        font-family: 'Consolas', monospace;
+        font-size: 1rem;
+        color: #66ccff;
+        margin-bottom: 0.2rem;
+        word-break: break-all;
+    }
+
+    .url-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .refresh-btn {
+        background-color: #222222;
+        border: 1px solid #444444;
+        color: #ffffff;
+        padding: 0.8rem 1.5rem;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 1rem;
+        display: block;
+        margin: 2rem auto;
+        transition: all 0.2s ease;
+    }
+
+    .refresh-btn:hover {
+        background-color: #333333;
+        border-color: #555555;
+    }
+
+    .loading {
+        text-align: center;
+        color: #cccccc;
+        font-size: 1.1rem;
+        padding: 2rem;
+    }
+
+    .copy-message {
+        position: fixed;
+        bottom: 2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        background-color: #333333;
+        color: #ffffff;
+        padding: 0.8rem 1.5rem;
+        border-radius: 5px;
+        border: 1px solid #555555;
+        z-index: 1000;
+    }
+
+    @@media (max-width: 768px) {
+        .ip-container {
+            padding: 1rem;
+        }
+
+        .ip-card {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .copy-btn {
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .url-buttons {
+            justify-content: center;
+        }
+    }
+
+    body, html {
+        margin: 0;
+        padding: 0;
+        background-color: #000000;
+    }
+    
+</style>
+
+@code {
+    private List<IPInfo> ipAddresses = new();
+    private string copyMessage = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshIPs();
+    }
+
+    private async Task CopyHttpUrl(string ipAddress)
+    {
+        await CopyToClipboard($"http://{ipAddress}:80");
+    }
+
+    private async Task CopyHttpsUrl(string ipAddress)
+    {
+        await CopyToClipboard($"https://{ipAddress}:443");
+    }
+
+    private async Task RefreshIPs()
+    {
+        ipAddresses.Clear();
+        
+        var networkInterfaces = NetworkInterface.GetAllNetworkInterfaces()
+            .Where(ni => ni.OperationalStatus == OperationalStatus.Up)
+            .Where(ni => ni.NetworkInterfaceType != NetworkInterfaceType.Loopback);
+
+        foreach (var networkInterface in networkInterfaces)
+        {
+            var ipProperties = networkInterface.GetIPProperties();
+            
+            foreach (var unicastAddress in ipProperties.UnicastAddresses)
+            {
+                var address = unicastAddress.Address;
+                
+                if (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork ||
+                    (address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetworkV6 && 
+                     !address.IsIPv6LinkLocal))
+                {
+                    ipAddresses.Add(new IPInfo
+                    {
+                        Address = address.ToString(),
+                        InterfaceName = networkInterface.Name,
+                        Type = address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork ? 
+                               "IPv4" : "IPv6"
+                    });
+                }
+            }
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task CopyToClipboard(string text)
+    {
+        try
+        {
+            await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", text);
+            copyMessage = $"Copied: {text}";
+            StateHasChanged();
+            
+            await Task.Delay(3000);
+            copyMessage = "";
+            StateHasChanged();
+        }
+        catch
+        {
+            copyMessage = "Copy failed - please copy manually";
+            StateHasChanged();
+            await Task.Delay(3000);
+            copyMessage = "";
+            StateHasChanged();
+        }
+    }
+
+    public class IPInfo
+    {
+        public string Address { get; set; } = "";
+        public string InterfaceName { get; set; } = "";
+        public string Type { get; set; } = "";
+    }
+}

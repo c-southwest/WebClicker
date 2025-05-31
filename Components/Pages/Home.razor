@@ -1,0 +1,171 @@
+﻿@page "/"
+@using WebClicker.Services
+@rendermode InteractiveServer
+@inject KeyboardService KeyboardService
+
+<PageTitle>Presentation Controller</PageTitle>
+
+<div class="container">
+    <h1>📱 Presentation Controller</h1>
+    <p class="subtitle">Remote slide control</p>
+    
+    <div class="tips">
+        <h3>Instructions:</h3>
+        <ul>
+            <li>Ensure PowerPoint is in presentation mode</li>
+            <li>Connect your phone to this page for remote control</li>
+        </ul>
+    </div>
+
+    <div class="button-container">
+        <button class="control-btn prev-btn" @onclick="PreviousSlide">
+            ⬆️ Previous
+        </button>
+        
+        <button class="control-btn next-btn" @onclick="NextSlide">
+            ⬇️ Next
+        </button>
+    </div>
+
+
+</div>
+
+<style>
+    body {
+        background-color: #000000;
+        margin: 0;
+        padding: 0;
+    }
+
+    .container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2rem;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #000000;
+        color: #ffffff;
+    }
+
+    h1 {
+        margin-top: 1rem;
+        margin-bottom: 0.5rem;
+        font-size: 1.8rem;
+        color: #ffffff;
+    }
+
+    .subtitle {
+        opacity: 0.7;
+        font-size: 1rem;
+        color: #cccccc;
+    }
+
+    .button-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin: 2rem 0;
+    }
+
+    .control-btn {
+        width: 500px;
+        height: 200px;
+        font-size: 2.2rem;
+        font-weight: bold;
+        border: 2px solid #333333;
+        border-radius: 15px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        background-color: #111111;
+        color: #ffffff;
+    }
+
+    .prev-btn:hover {
+        background-color: #222222;
+        border-color: #444444;
+    }
+
+    .prev-btn:active {
+        background-color: #333333;
+        transform: scale(0.98);
+    }
+
+    .next-btn:hover {
+        background-color: #222222;
+        border-color: #444444;
+    }
+
+    .next-btn:active {
+        background-color: #333333;
+        transform: scale(0.98);
+    }
+
+    .tips {
+        margin-top: 1rem;
+        background-color: #111111;
+        border: 1px solid #333333;
+        padding: 1.5rem;
+        border-radius: 10px;
+        max-width: 500px;
+    }
+
+    .tips h3 {
+        margin-top: 0;
+        margin-bottom: 1rem;
+        color: #ffffff;
+        font-size: 1.1rem;
+    }
+
+    .tips ul {
+        text-align: left;
+        margin: 0;
+        padding-left: 1.2rem;
+    }
+
+    .tips li {
+        margin-bottom: 0.5rem;
+        color: #cccccc;
+        font-size: 0.9rem;
+        line-height: 1.4;
+    }
+
+    @@media (max-width: 768px) {
+        .container {
+            padding: 0rem;
+        }
+        
+        .control-btn {
+            width: 400px;
+            height: 200px;
+            font-size: 2.2rem;
+        }
+        
+        .tips {
+            max-width: 100%;
+            padding: 1rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+        }
+    }
+
+    /* Ensure maximum black for OLED */
+    * {
+        -webkit-tap-highlight-color: transparent;
+    }
+</style>
+
+@code {
+    private void NextSlide()
+    {
+        KeyboardService.NextSlide();
+        Console.WriteLine("Next slide command sent.");
+    }
+
+    private void PreviousSlide()
+    {
+        KeyboardService.PreviousSlide();
+        Console.WriteLine("Previous slide command sent.");
+    }
+}
